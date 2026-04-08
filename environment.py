@@ -12,8 +12,8 @@ from graders import (
 
 
 def clamp(x: float) -> float:
-    """Strictly clamp to (0, 1) exclusive — never 0.0 or 1.0."""
-    return max(0.01, min(0.99, x))
+    """Strictly within (0, 1) — safely away from both edges."""
+    return round(max(0.05, min(0.95, float(x))), 4)
 
 
 class CustomerSupportEnv:
@@ -57,38 +57,33 @@ class CustomerSupportEnv:
     def step(self, action: Dict[str, Any]) -> Tuple[None, Dict[str, Any], bool, Dict[str, Any]]:
 
         if self.done:
-            return None, {"score": 0.02}, True, {"error": "episode_already_done"}
+            return None, Reward(score=0.05).dict(), True, {"error": "episode_already_done"}
 
         if self.current is None:
-            return None, {"score": 0.02}, True, {"error": "no_active_ticket"}
+            return None, Reward(score=0.05).dict(), True, {"error": "no_active_ticket"}
 
         expected = self.current["expected"]
 
-        category = action.get("category", "")
-        priority = action.get("priority", "")
+        category      = action.get("category", "")
+        priority      = action.get("priority", "")
         chosen_action = action.get("action", "")
-        response = action.get("response", "")
+        response      = action.get("response", "")
 
-        
         category_score = clamp(grade_category(category, expected["category"]))
         priority_score = clamp(grade_priority(priority, expected["priority"]))
-        action_score = clamp(grade_action(chosen_action, expected["action"]))
+        action_score   = clamp(grade_action(chosen_action, expected["action"]))
         response_score = clamp(grade_response(response))
 
-        
         reward_value = (
             0.15 * category_score +
             0.15 * priority_score +
-            0.20 * action_score +
+            0.20 * action_score  +
             0.50 * response_score
         )
 
-        
         reward_value = clamp(reward_value)
 
         self.done = True
-
-        reward = Reward(score=reward_value)
 
         info = {
             "expected": expected,
@@ -105,4 +100,4 @@ class CustomerSupportEnv:
             }
         }
 
-        return None, reward.dict(), True, info
+        return None, Reward(score=reward_value).dict(), True, info
