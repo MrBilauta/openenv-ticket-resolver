@@ -11,9 +11,14 @@ from graders import (
 )
 
 
+
 def clamp(x: float) -> float:
-    """Strictly within (0, 1) — safely away from both edges."""
-    return round(max(0.05, min(0.95, float(x))), 4)
+    try:
+        x = float(x)
+    except:
+        return 0.02
+
+    return max(0.01, min(0.99, x))
 
 
 class CustomerSupportEnv:
@@ -57,10 +62,10 @@ class CustomerSupportEnv:
     def step(self, action: Dict[str, Any]) -> Tuple[None, Dict[str, Any], bool, Dict[str, Any]]:
 
         if self.done:
-            return None, Reward(score=0.05).dict(), True, {"error": "episode_already_done"}
+            return None, Reward(score=0.02).dict(), True, {"error": "episode_already_done"}
 
         if self.current is None:
-            return None, Reward(score=0.05).dict(), True, {"error": "no_active_ticket"}
+            return None, Reward(score=0.02).dict(), True, {"error": "no_active_ticket"}
 
         expected = self.current["expected"]
 
@@ -81,6 +86,7 @@ class CustomerSupportEnv:
             0.50 * response_score
         )
 
+        
         reward_value = clamp(reward_value)
 
         self.done = True
