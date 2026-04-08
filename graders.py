@@ -1,26 +1,47 @@
+def safe_score(x):
+    return min(max(x, 0.05), 0.95)
+
+
 def grade_category(pred, expected):
-    return 1.0 if pred == expected else 0.0
+    if pred == expected:
+        return 0.95
+    return 0.05
 
 
 def grade_priority(pred, expected):
-    return 1.0 if pred == expected else 0.0
+    if pred == expected:
+        return 0.95
+    return 0.05
 
 
 def grade_action(pred, expected):
-    return 1.0 if pred == expected else 0.0
+    if pred == expected:
+        return 0.95
+    return 0.05
 
 
 def grade_response(text):
     text = text.lower()
-    score = 0.0
+    score = 0.05  # start safely above 0
 
-    if "hello" in text or "hi" in text:
-        score += 0.25
-    if "sorry" in text:
-        score += 0.25
-    if "resolve" in text or "refund" in text or "support" in text:
-        score += 0.25
-    if "thank" in text:
-        score += 0.25
+    # Greeting
+    if any(word in text for word in ["hello", "hi", "dear"]):
+        score += 0.18
 
-    return min(score, 1.0)
+    # Apology
+    if any(word in text for word in ["sorry", "apologize", "understand"]):
+        score += 0.18
+
+    # Solution clarity
+    if any(word in text for word in ["please", "try", "reset", "check", "refund", "resolve"]):
+        score += 0.27
+
+    # Professional tone
+    if len(text) > 50:
+        score += 0.14
+
+    # Closing
+    if any(word in text for word in ["thank", "regards", "support"]):
+        score += 0.13
+
+    return safe_score(score)
