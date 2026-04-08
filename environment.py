@@ -18,7 +18,6 @@ class CustomerSupportEnv:
         self.done: bool = False
 
     def reset(self) -> Dict[str, Any]:
-        """Reset environment and return initial observation"""
         self.done = False
 
         if self.task_id == "easy":
@@ -44,7 +43,6 @@ class CustomerSupportEnv:
         return observation.dict()
 
     def state(self) -> Dict[str, Any]:
-        """Return current environment state"""
         return {
             "task_id": self.task_id,
             "done": self.done,
@@ -52,40 +50,53 @@ class CustomerSupportEnv:
         }
 
     def step(self, action: Dict[str, Any]) -> Tuple[None, Dict[str, Any], bool, Dict[str, Any]]:
-        """
-        Perform one step in environment
-        Returns: observation, reward, done, info
-        """
 
         if self.done:
-            return None, {"score": 0.0}, True, {"error": "episode_already_done"}
+            return None, {"score": 0.02}, True, {"error": "episode_already_done"}
 
         if self.current is None:
-            return None, {"score": 0.0}, True, {"error": "no_active_ticket"}
+            return None, {"score": 0.02}, True, {"error": "no_active_ticket"}
 
         expected = self.current["expected"]
 
-        # Extract agent outputs safely
         category = action.get("category", "")
         priority = action.get("priority", "")
         chosen_action = action.get("action", "")
         response = action.get("response", "")
 
-        # Grading (each returns 0.0 or 1.0 or partial)
-        category_score = grade_category(category, expected["category"])
-        priority_score = grade_priority(priority, expected["priority"])
-        action_score = grade_action(chosen_action, expected["action"])
-        response_score = grade_response(response)
+        
+        def safe_score(x):
+            if x >= 1.0:
+                return 0.98
+            elif x <= 0.0:
+                return 0.02
+            return x
 
-        # Weighted reward (total = 1.0)
+        category_score = safe_score(grade_category(category, expected["category"]))
+        priority_score = safe_score(grade_priority(priority, expected["priority"]))
+        action_score = safe_score(grade_action(chosen_action, expected["action"]))
+        response_score = safe_score(grade_response(response))
+
+        
         reward_value = (
-            0.2 * category_score +
-            0.2 * priority_score +
+            0.15 * category_score +
+            0.15 * priority_score +
             0.2 * action_score +
-            0.4 * response_score
+            0.5 * response_score
         )
 
-        reward_value = round(min(max(reward_value, 0.0), 1.0), 2)
+        
+        
+        reward_value = max(min(reward_value, 0.98), 0.02)
+
+        
+        reward_value = float(f"{reward_value:.2f}")
+
+        
+        if reward_value >= 1.0:
+            reward_value = 0.98
+        if reward_value <= 0.0:
+            reward_value = 0.02
 
         self.done = True
 
