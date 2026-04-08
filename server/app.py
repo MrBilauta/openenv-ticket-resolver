@@ -1,6 +1,7 @@
-from fastapi import FastAPI, Body
+from fastapi import FastAPI, Body, Request
+from fastapi.responses import JSONResponse
 import uvicorn
-from models import Action
+from models import Action, Reward
 from environment import CustomerSupportEnv
 
 app = FastAPI()
@@ -26,7 +27,19 @@ def state():
 
 
 @app.post("/step")
-def step(action: Action = Body(default={})):
+async def step(request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+
+    action = Action(
+        category=body.get("category", ""),
+        priority=body.get("priority", ""),
+        action=body.get("action", ""),
+        response=body.get("response", "")
+    )
+
     obs, reward, done, info = env.step(action.dict())
     return {
         "observation": obs,
