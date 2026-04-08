@@ -16,9 +16,9 @@ def clamp(x: float) -> float:
     try:
         x = float(x)
     except:
-        return 0.02
+        return 0.0001
 
-    return max(0.01, min(0.99, x))
+    return max(0.0001, min(0.998, x))
 
 
 class CustomerSupportEnv:
