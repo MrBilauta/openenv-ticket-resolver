@@ -51,6 +51,7 @@ class CustomerSupportEnv:
 
     def step(self, action: Dict[str, Any]) -> Tuple[None, Dict[str, Any], bool, Dict[str, Any]]:
 
+        
         if self.done:
             return None, {"score": 0.02}, True, {"error": "episode_already_done"}
 
@@ -65,13 +66,14 @@ class CustomerSupportEnv:
         response = action.get("response", "")
 
         
-        def safe_score(x):
+        def safe_score(x: float) -> float:
             if x >= 1.0:
                 return 0.98
-            elif x <= 0.0:
+            if x <= 0.0:
                 return 0.02
             return x
 
+        
         category_score = safe_score(grade_category(category, expected["category"]))
         priority_score = safe_score(grade_priority(priority, expected["priority"]))
         action_score = safe_score(grade_action(chosen_action, expected["action"]))
@@ -86,6 +88,8 @@ class CustomerSupportEnv:
         )
 
         
+        reward_value = 0.02 + (0.96 * reward_value)
+
         
         reward_value = max(min(reward_value, 0.98), 0.02)
 
