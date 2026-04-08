@@ -16,10 +16,10 @@ class Observation(BaseModel):
 
 
 class Action(BaseModel):
-    category: str
-    priority: str
-    action: str
-    response: str
+    category: str = ""
+    priority: str = ""
+    action: str = ""
+    response: str = ""
 
 
 class Reward(BaseModel):
@@ -27,7 +27,7 @@ class Reward(BaseModel):
 
 
 class StepResult(BaseModel):
-    observation: Optional[Observation]
+    observation: Optional[Observation] = None
     reward: Reward
     done: bool
     info: Dict[str, Any]
