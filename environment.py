@@ -11,6 +11,11 @@ from graders import (
 )
 
 
+def clamp(x: float) -> float:
+    """Strictly clamp to (0, 1) exclusive — never 0.0 or 1.0."""
+    return max(0.01, min(0.99, x))
+
+
 class CustomerSupportEnv:
     def __init__(self, task_id: str = "easy"):
         self.task_id = task_id
@@ -51,7 +56,6 @@ class CustomerSupportEnv:
 
     def step(self, action: Dict[str, Any]) -> Tuple[None, Dict[str, Any], bool, Dict[str, Any]]:
 
-        
         if self.done:
             return None, {"score": 0.02}, True, {"error": "episode_already_done"}
 
@@ -66,41 +70,21 @@ class CustomerSupportEnv:
         response = action.get("response", "")
 
         
-        def safe_score(x: float) -> float:
-            if x >= 1.0:
-                return 0.98
-            if x <= 0.0:
-                return 0.02
-            return x
-
-        
-        category_score = safe_score(grade_category(category, expected["category"]))
-        priority_score = safe_score(grade_priority(priority, expected["priority"]))
-        action_score = safe_score(grade_action(chosen_action, expected["action"]))
-        response_score = safe_score(grade_response(response))
+        category_score = clamp(grade_category(category, expected["category"]))
+        priority_score = clamp(grade_priority(priority, expected["priority"]))
+        action_score = clamp(grade_action(chosen_action, expected["action"]))
+        response_score = clamp(grade_response(response))
 
         
         reward_value = (
             0.15 * category_score +
             0.15 * priority_score +
-            0.2 * action_score +
-            0.5 * response_score
+            0.20 * action_score +
+            0.50 * response_score
         )
 
         
-        reward_value = 0.02 + (0.96 * reward_value)
-
-        
-        reward_value = max(min(reward_value, 0.98), 0.02)
-
-        
-        reward_value = float(f"{reward_value:.2f}")
-
-        
-        if reward_value >= 1.0:
-            reward_value = 0.98
-        if reward_value <= 0.0:
-            reward_value = 0.02
+        reward_value = clamp(reward_value)
 
         self.done = True
 
