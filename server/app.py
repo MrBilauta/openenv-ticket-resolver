@@ -1,7 +1,6 @@
 from fastapi import FastAPI, Body, Request
-from fastapi.responses import JSONResponse
 import uvicorn
-from models import Action, Reward
+from models import Action
 from environment import CustomerSupportEnv
 
 app = FastAPI()
@@ -26,11 +25,12 @@ def state():
     return env.state()
 
 
+
 @app.post("/step")
 async def step(request: Request):
     try:
         body = await request.json()
-    except Exception:
+    except:
         body = {}
 
     action = Action(
@@ -40,7 +40,16 @@ async def step(request: Request):
         response=body.get("response", "")
     )
 
-    obs, reward, done, info = env.step(action.dict())
+    try:
+        obs, reward, done, info = env.step(action.dict())
+    except:
+        return {
+            "observation": None,
+            "reward": {"score": 0.02},
+            "done": True,
+            "info": {"error": "fallback"}
+        }
+
     return {
         "observation": obs,
         "reward": reward,
