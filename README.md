@@ -1,5 +1,5 @@
 ---
-title: OpenEnv Ticket Resolver
+title: OpenEnv Ticket Resolver (Hackathon)
 emoji: 🤖
 colorFrom: blue
 colorTo: purple
